@@ -6,7 +6,7 @@
 
 class Error : public std::exception {
 public:
-    const char* what() const noexcept
+    [[nodiscard]] const char* what() const noexcept override
     {
         return _message.c_str();
     }

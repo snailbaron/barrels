@@ -1,0 +1,18 @@
+Checks: >
+  *,
+  -altera-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -fuchsia-*,
+  -google-readability-casting,
+  -hicpp-special-member-functions,
+  -hicpp-uppercase-literal-suffix,
+  -llvmlibc-*,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-implicit-bool-conversion,
+  -readability-magic-numbers,
+  -readability-uppercase-literal-suffix,
+CheckOptions:
+  - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value: 'true'

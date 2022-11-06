@@ -1,10 +1,10 @@
 #pragma once
 
-#include "sdl.hpp"
-
 #include "events.hpp"
 
 #include <thing.hpp>
+
+#include <SDL.h>
 
 #include <map>
 #include <optional>
@@ -18,10 +18,10 @@ struct KeyboardControlState {
 
 class Camera {
 public:
-    Vector project(const Vector& worldPosition) const;
+    [[nodiscard]] Vector project(const Vector& worldPosition) const;
 
-    void lookAt(Vector worldCenter);
-    void viewport(Vector viewportSize);
+    void lookAt(const Vector& worldCenter);
+    void viewport(int width, int height);
 
 private:
     Vector _worldCenter;

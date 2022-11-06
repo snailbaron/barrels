@@ -2,13 +2,15 @@
 
 #include "config.hpp"
 #include "events.hpp"
+#include "sdl.hpp"
 
 #include <iostream>
 #include <utility>
 
 Vector Camera::project(const Vector& worldPosition) const
 {
-    const auto ratio = config().pixelsPerUnit * config().pixelZoom;
+    const auto ratio = static_cast<float>(
+        config().pixelsPerUnit * config().pixelZoom);
     const auto screenCenter = _viewportSize / 2;
 
     return {
@@ -17,14 +19,14 @@ Vector Camera::project(const Vector& worldPosition) const
     };
 }
 
-void Camera::lookAt(Vector worldCenter)
+void Camera::lookAt(const Vector& worldCenter)
 {
-    _worldCenter = std::move(worldCenter);
+    _worldCenter = worldCenter;
 }
 
-void Camera::viewport(Vector viewportSize)
+void Camera::viewport(int width, int height)
 {
-    _viewportSize = std::move(viewportSize);
+    _viewportSize = {static_cast<float>(width), static_cast<float>(height)};
 }
 
 View::View()
@@ -58,7 +60,7 @@ View::View()
         int width = 0;
         int height = 0;
         SDL_GetWindowSize(_window, &width, &height);
-        _camera.viewport({1.f * width, 1.f * height});
+        _camera.viewport(width, height);
     }
 
     _renderer = sdlCheck(SDL_CreateRenderer(
@@ -72,14 +74,16 @@ bool View::processInput()
     bool controlChanged = false;
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT) {
+        if (e.type == SDL_QUIT ||
+                (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_q)) {
             return false;
-        } else if ((e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) &&
-                e.key.repeat) {
+        }
+
+        if ((e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) && e.key.repeat) {
             continue;
-        } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_q) {
-            return false;
-        } else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
+        }
+
+        if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
             if (e.key.keysym.sym == SDLK_a) {
                 _keyboardControlState.left = (e.type == SDL_KEYDOWN);
                 controlChanged = true;
@@ -100,8 +104,10 @@ bool View::processInput()
         events.push(evt::Control{
             .entity = *_controlledEntity,
             .control = {
-                0.f + _keyboardControlState.right - _keyboardControlState.left,
-                0.f + _keyboardControlState.up - _keyboardControlState.down,
+                static_cast<float>(
+                    _keyboardControlState.right - _keyboardControlState.left),
+                static_cast<float>(
+                    _keyboardControlState.up - _keyboardControlState.down),
             },
         });
     }
@@ -109,7 +115,7 @@ bool View::processInput()
     return true;
 }
 
-void View::update(double delta)
+void View::update([[maybe_unused]] double delta)
 {
 }
 
@@ -120,7 +126,9 @@ void View::present() const
 
     for (const auto& [e, position] : _positions) {
         const auto p = _camera.project(position);
-        const auto offset = config().pixelsPerUnit * config().pixelZoom / 2;
+        const auto offset =
+            static_cast<float>(config().pixelsPerUnit * config().pixelZoom) /
+                2.f;
         const auto color = SDL_Color{200, 200, 200, 255};
 
         auto vs = std::vector<SDL_Vertex> {
@@ -132,7 +140,12 @@ void View::present() const
         auto indices = std::vector<int> {0, 1, 2, 0, 2, 3};
 
         sdlCheck(SDL_RenderGeometry(
-            _renderer, nullptr, vs.data(), vs.size(), indices.data(), indices.size()));
+            _renderer,
+            nullptr,
+            vs.data(),
+            (int)vs.size(),
+            indices.data(),
+            (int)indices.size()));
     }
 
     SDL_RenderPresent(_renderer);

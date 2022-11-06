@@ -23,7 +23,7 @@ struct Control {
     Vector control;
 };
 
-} // namespace
+} // namespace cmp
 
 class World : public evening::Subscriber {
 public:
